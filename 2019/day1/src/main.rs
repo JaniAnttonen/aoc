@@ -8,15 +8,21 @@ fn calc_fuel_for_mass(module_mass: f64) -> f64 {
     round::floor(module_mass / 3.0, 0) - 2.0
 }
 
-fn main() -> io::Result<()> {
+fn part_one() -> io::Result<()> {
     let f = File::open("./src/input")?;
     let f = BufReader::new(f);
     let mut fuel_needed: f64 = 0.0;
+
     for line in f.lines() {
         let line_string: String = line.unwrap();
         let module_mass: f64 = line_string.parse().unwrap();
         fuel_needed += calc_fuel_for_mass(module_mass)
     }
-    println!("{}", fuel_needed);
-    Ok(())
+
+    Ok((fuel_needed))
+}
+
+fn main() {
+    let first_result = part_one();
+    println!("Part one: {}", first_result)
 }
