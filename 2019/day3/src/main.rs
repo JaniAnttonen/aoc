@@ -15,6 +15,12 @@ impl PartialEq for Point {
     }
 }
 
+impl Point {
+    fn abs(&self) -> isize {
+        self.x.abs() + self.y.abs()
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 struct Line {
     from: Point,
@@ -41,6 +47,18 @@ impl Line {
             collision = true;
         }
         collision
+    }
+    fn intersects_at(&self, other: &Self) -> Point {
+        match self.is_vertical() {
+            true => Point {
+                x: other.from.x,
+                y: self.from.y,
+            },
+            false => Point {
+                x: self.from.x,
+                y: other.from.y,
+            },
+        }
     }
 }
 
@@ -87,17 +105,13 @@ fn find_intersections(mut lines: Vec<Line>) -> Result<Vec<Point>, Box<dyn Error>
     loop {
         match lines.pop() {
             None => {
-                println!("No more lines to check!");
                 break;
             }
             Some(line) => {
                 for checked_line in &lines {
                     let intersects = checked_line.intersects(&line);
                     if intersects {
-                        println!("Intersection found for {:?} and {:?}!", line, checked_line);
-                    //intersections.push(calc_intersection(checked_line, line));
-                    } else {
-                        println!("No intersections found!");
+                        intersections.push(line.intersects_at(checked_line));
                     }
                 }
             }
@@ -106,12 +120,36 @@ fn find_intersections(mut lines: Vec<Line>) -> Result<Vec<Point>, Box<dyn Error>
     Ok(intersections)
 }
 
+fn nearest_from_origin(mut points: Vec<Point>) -> Point {
+    let mut nearest: Point = points.pop().unwrap();
+    loop {
+        match points.pop() {
+            None => {
+                break;
+            }
+            Some(point) => {
+                if nearest.abs() > point.abs() {
+                    nearest = point;
+                }
+            }
+        }
+    }
+    nearest
+}
+
 fn main() {
     let file_path: String = String::from("./src/input");
     let prog_input: Vec<StringRecord> = read_input(file_path).unwrap();
+    let mut intersections: Vec<Point> = Vec::new();
     for row in prog_input {
         let path: Vec<String> = row.deserialize(None).unwrap();
         let lines_for_input: Vec<Line> = calc_lines(path).unwrap();
-        let intersections_for_input: Vec<Point> = find_intersections(lines_for_input).unwrap();
+        intersections.append(&mut find_intersections(lines_for_input).unwrap());
     }
+    let nearest_intersection = nearest_from_origin(intersections);
+    let distance_to_nearest = nearest_intersection.abs();
+    println!(
+        "The manhattan distance to nearest intersection is {:?}",
+        distance_to_nearest
+    );
 }
